@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:WpfApp4"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="小畫家ver1" Height="490" Width="800">
     <DockPanel LastChildFill="False">
         <Menu Height="30" DockPanel.Dock="Top">
             <MenuItem Height="25" Header="檔案" VerticalAlignment="Center">
@@ -17,10 +17,18 @@
         <ToolBarTray Height="40" DockPanel.Dock="Top">
             <ToolBar Height="38" Width="400" Background="Aquamarine">
                 <Label Content="筆刷色彩" FontSize="14" VerticalContentAlignment="Center"/>
-                <xctk:ColorPicker x:Name="strokeColorPicker" Width="100"/>
+                <xctk:ColorPicker x:Name="strokeColorPicker" Width="100" SelectedColorChanged="strokeColorPicker_SelectedColorChanged"/>
             </ToolBar>
         </ToolBarTray>
-        <Canvas Background="#FFFFECC4" DockPanel.Dock="Top" Height="350"/>
-    </DockPanel>
+        <Canvas x:Name="myCanvas" Background="#FFFFECC4" DockPanel.Dock="Top" Height="355" MouseEnter="myCanvas_MouseEnter" MouseLeftButtonDown="myCanvas_MouseLeftButtonDown" MouseMove="myCanvas_MouseMove" MouseUp="myCanvas_MouseUp"/>
+        <StatusBar Height="35" DockPanel.Dock="Bottom" Background="LightGray">
+            <StatusBarItem>
+                <Label x:Name="statusLabel" Content="Ready" FontSize="14"/>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Label x:Name="statusPoint" Content="(0, 0) - (0, 0)" FontFamily="14"/>
+            </StatusBarItem>
+        </StatusBar>
+            </DockPanel>
 
 </Window>
