@@ -1,9 +1,11 @@
-﻿using System.Windows;
+﻿using Microsoft.Win32;
+using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Xceed.Wpf.Toolkit.PropertyGrid;
 
 namespace WpfApp4
 {
@@ -31,6 +33,40 @@ namespace WpfApp4
         {
             //把滑鼠變成筆
             myCanvas.Cursor = Cursors.Pen;
+        }
+
+        private void MyCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            Brush strokeBrush = new SolidColorBrush(strokeColor);
+            Brush fillBrush = new SolidColorBrush(fillColor);
+
+            switch (shapeType)
+            {
+                case "line":
+                    var line = myCanvas.Children.OfType<Line>().LastOrDefault();
+                    line.Stroke = strokeBrush;
+                    line.StrokeThickness = strokeThickness;
+                    break;
+                case "rectangle":
+                    var rectangle = myCanvas.Children.OfType<Rectangle>().LastOrDefault();
+                    rectangle.Stroke = strokeBrush;
+                    rectangle.Fill = fillBrush;
+                    rectangle.StrokeThickness = strokeThickness;
+                    break;
+                case "ellipse":
+                    var ellipse = myCanvas.Children.OfType<Ellipse>().LastOrDefault();
+                    ellipse.Stroke = strokeBrush;
+                    ellipse.Fill = fillBrush;
+                    ellipse.StrokeThickness = strokeThickness;
+                    break;
+                case "polyline":
+                    var polyline = myCanvas.Children.OfType<Polyline>().LastOrDefault();
+                    polyline.Stroke = strokeBrush;
+                    polyline.Fill = fillBrush;
+                    polyline.StrokeThickness = strokeThickness;
+                    break;
+            }
+            DisplayStatu();
         }
 
         private void MyCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -85,41 +121,8 @@ namespace WpfApp4
                         break;
                 }
             }
+            DisplayStatu();
 
-
-        }
-
-        private void MyCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            Brush strokeBrush = new SolidColorBrush(strokeColor);
-            Brush fillBrush = new SolidColorBrush(fillColor);
-
-            switch (shapeType)
-            {
-                case "line":
-                    var line = myCanvas.Children.OfType<Line>().LastOrDefault();
-                    line.Stroke = strokeBrush;
-                    line.StrokeThickness = strokeThickness;
-                    break;
-                case "rectangle":
-                    var rectangle = myCanvas.Children.OfType<Rectangle>().LastOrDefault();
-                    rectangle.Stroke = strokeBrush;
-                    rectangle.Fill = fillBrush;
-                    rectangle.StrokeThickness = strokeThickness;
-                    break;
-                case "ellipse":
-                    var ellipse = myCanvas.Children.OfType<Ellipse>().LastOrDefault();
-                    ellipse.Stroke = strokeBrush;
-                    ellipse.Fill = fillBrush;
-                    ellipse.StrokeThickness = strokeThickness;
-                    break;
-                case "polyline":
-                    var polyline = myCanvas.Children.OfType<Polyline>().LastOrDefault();
-                    polyline.Stroke = strokeBrush;
-                    polyline.Fill = fillBrush;
-                    polyline.StrokeThickness = strokeThickness;
-                    break;
-            }
         }
 
         private void MyCanvas_MouseMove(object sender, MouseEventArgs e)
@@ -175,13 +178,20 @@ namespace WpfApp4
                     if (myCanvas.Children.Count == 0) myCanvas.Cursor = Cursors.Arrow;
                     break;
             }
-
+            DisplayStatu();
         }
 
         private void DisplayStatu()
         {
+            if(actionType != "draw") statusAction.Content = $"{actionType}";
+            else statusAction.Content = $"繪圖模式: {shapeType}";
             //按下去起點變化，放開終點鎖定
             statusPoint.Content = $"({Convert.ToInt32(start.X)},{Convert.ToInt32(start.Y)}) - ({Convert.ToInt32(dest.X)},{Convert.ToInt32(dest.Y)})";
+            int lineCount = myCanvas.Children.OfType<Line>().Count();
+            int rectangleCount = myCanvas.Children.OfType<Rectangle>().Count();
+            int ellipseCount = myCanvas.Children.OfType<Ellipse>().Count();
+            int polylineCount = myCanvas.Children.OfType<Polyline>().Count();
+            statusShape.Content = $"Line: {lineCount}, Rectangle: {rectangleCount}, Ellipse: {ellipseCount}, Polyline: {polylineCount}";
         }
 
         private void StrokeColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
@@ -205,12 +215,67 @@ namespace WpfApp4
         private void EraserButton_Click(object sender, RoutedEventArgs e)
         {
             actionType = "eraser";
+            DisplayStatu();
         }
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             actionType = "clear";
             myCanvas.Children.Clear();
+            DisplayStatu();
+        }
+
+        private void SaveCanvas_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Title = "儲存畫布",
+                Filter = "PNG Files (*.png)|*.png|JPG Files (*.jpg)|*.jpg|All Files (*.*)|*.*",
+                DefaultExt = ".png"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                // 取得畫布的寬度和高度
+                int w = (int)myCanvas.ActualWidth;
+                int h = (int)myCanvas.ActualHeight;
+
+                //儲存畫布的內容
+                RenderTargetBitmap renderBitmap = new RenderTargetBitmap(w, h, 96d, 96d, PixelFormats.Pbgra32);
+
+                // 使用 VisualBrush 將畫布內容複製到 DrawingVisual
+                DrawingVisual dv = new DrawingVisual();
+                using (DrawingContext dc = dv.RenderOpen())
+                {
+                    VisualBrush vb = new VisualBrush(myCanvas);
+                    dc.DrawRectangle(vb, null, new Rect(new Point(), new Size(w, h)));
+                }
+
+                // 將 DrawingVisual 渲染到 RenderTargetBitmap
+                renderBitmap.Render(dv);
+
+                // 根據檔案副檔名選擇相應的編碼器
+                BitmapEncoder encoder;
+                string extension = System.IO.Path.GetExtension(saveFileDialog.FileName).ToLower();
+                switch (extension)
+                {
+                    case ".jpg":
+                        encoder = new JpegBitmapEncoder();
+                        break;
+                    default:
+                        encoder = new PngBitmapEncoder();
+                        break;
+                }
+
+                // 將 RenderTargetBitmap 加入到編碼器的幀中
+                encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
+
+                // 使用檔案流將圖像儲存到選擇的檔案中
+                using (FileStream outStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
+                {
+                    encoder.Save(outStream);
+                }
+            }
         }
 
         private void StrokeThicknessSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
