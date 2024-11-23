@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -11,12 +12,17 @@ namespace WpfApp4
     public partial class MainWindow : Window
     {
         Color storkeColor = Colors.Black;
+        Color fillColor = Colors.Aqua;
         Brush strokeBrush = Brushes.Black;
+        Brush fillBrush = Brushes.Aqua;
+        string shape;
+        int strokeThickness = 2;
         Point start, dest;
         public MainWindow()
         {
             InitializeComponent();
             strokeColorPicker.SelectedColor = storkeColor;
+            fillColorPicker.SelectedColor = fillColor;
         }
 
         private void myCanvas_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
@@ -52,6 +58,34 @@ namespace WpfApp4
         private void strokeColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
         {
             storkeColor = strokeColorPicker.SelectedColor.Value;
+        }
+
+        private void fillColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            fillColor = fillColorPicker.SelectedColor.Value;
+        }
+
+        private void ShapeButton_Click(object sender, RoutedEventArgs e)
+        {
+            //確認按下的按鈕為何
+            var button = sender as RadioButton;
+            shape = button.Tag.ToString();
+            MessageBox.Show(shape);
+        }
+
+        private void EraserButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void strokeThicknessSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            strokeThickness = (int)strokeThicknessSlider.Value;
         }
 
         private void myCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
